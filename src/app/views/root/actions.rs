@@ -12,7 +12,7 @@ use crate::app::{
     ShowTerminal, SplitTerminalDown, SplitTerminalRight, SubmitFollowUp, SubmitPrompt,
     SwitchSession0, SwitchSession1, SwitchSession2, SwitchSession3, SwitchSession4, SwitchSession5,
     SwitchSession6, SwitchSession7, SwitchSession8, SwitchSession9, TerminalFocusNext,
-    TerminalFocusPrevious, ToggleArchivedSessions,
+    TerminalFocusPrevious, ToggleArchivedSessions, TogglePerformanceMonitor,
 };
 
 pub(super) fn bind(root: gpui::Div, cx: &mut Context<FarcasterApp>) -> gpui::Div {
@@ -128,6 +128,9 @@ fn bind_actions(root: gpui::Div, cx: &mut Context<FarcasterApp>) -> gpui::Div {
     }))
     .on_action(cx.listener(|this, _: &ToggleArchivedSessions, _, cx| {
         this.toggle_rail_panel(RailPanel::Archived, cx)
+    }))
+    .on_action(cx.listener(|this, _: &TogglePerformanceMonitor, _, cx| {
+        this.toggle_performance_monitor(cx);
     }))
     .on_action(cx.listener(|this, _: &SubmitPrompt, window, cx| {
         let value = this.composer.input.read(cx).value().trim().to_owned();

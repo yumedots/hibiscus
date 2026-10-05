@@ -442,3 +442,28 @@ fn copy_shortcuts_route_through_the_application_command() {
         shortcut.label == "Copy selection" && shortcut.keystroke == platform!("c")
     }));
 }
+
+#[test]
+fn f9_toggles_the_performance_monitor_from_the_app_context() {
+    use crate::app::{APP_INPUT_CONTEXT, NATIVE_INPUT_CONTEXT};
+    use gpui::Action as _;
+
+    let keymap = gpui::Keymap::new(bindings());
+    let stroke = gpui::Keystroke::parse("f9").expect("f9 keystroke");
+    let (app_bindings, _) = keymap.bindings_for_input(
+        std::slice::from_ref(&stroke),
+        &[gpui::KeyContext::parse(APP_INPUT_CONTEXT).expect("app context")],
+    );
+    assert_eq!(
+        app_bindings.first().map(|binding| binding.action().name()),
+        Some(crate::app::TogglePerformanceMonitor.name())
+    );
+    let (native_bindings, _) = keymap.bindings_for_input(
+        &[stroke],
+        &[gpui::KeyContext::parse(NATIVE_INPUT_CONTEXT).expect("native context")],
+    );
+    assert!(
+        native_bindings.is_empty(),
+        "f9 must not reach embedded views"
+    );
+}
