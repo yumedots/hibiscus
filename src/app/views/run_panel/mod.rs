@@ -1,5 +1,5 @@
 pub(crate) use crate::app::ui::change_tree;
-mod performance;
+pub(in crate::app) mod performance;
 mod repository;
 pub(in crate::app) mod repository_controls;
 mod repository_presentation;
@@ -15,7 +15,6 @@ use gpui::{
 
 pub(super) use resize::clamped_run_panel_width;
 
-use self::performance::render_performance;
 use super::super::{FarcasterApp, RunPanelView};
 use crate::{
     app::ui::primitives::{ButtonTone, button, panel},
@@ -51,13 +50,6 @@ impl FarcasterApp {
             .pb(theme().size(14.0))
             .pl(theme().size(18.0))
             .gap(theme().space.md)
-            .when_some(
-                self.lifecycle
-                    .performance_monitor
-                    .as_ref()
-                    .filter(|monitor| monitor.is_detailed()),
-                |run, monitor| run.child(render_performance(&monitor.summary)),
-            )
             .when_some(root, |run, root| {
                 let selected =
                     self.snapshot.selected_session.as_deref() == Some(root.path.as_path());

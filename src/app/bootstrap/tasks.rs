@@ -37,12 +37,31 @@ pub(super) fn start_performance_monitor(
             cx.background_executor()
                 .timer(crate::app::infrastructure::performance::sample_interval())
                 .await;
+            let detailed = weak
+                .update(cx, |this, _| {
+                    this.lifecycle.performance_monitor.as_ref().is_some_and(
+                        crate::app::infrastructure::performance::PerformanceMonitor::is_detailed,
+                    )
+                })
+                .unwrap_or(false);
+            let energy = if detailed {
+                cx.background_spawn(async { crate::app::infrastructure::energy::sample() })
+                    .await
+            } else {
+                None
+            };
             if weak
                 .update(cx, |this, cx| {
-                    if this.lifecycle.performance_monitor.as_mut().is_some_and(
-                        crate::app::infrastructure::performance::PerformanceMonitor::sample_if_due,
-                    ) {
-                        this.notify_run_panel(cx);
+                    let sampled =
+                        this.lifecycle
+                            .performance_monitor
+                            .as_mut()
+                            .is_some_and(|monitor| {
+                                monitor.set_energy(energy);
+                                monitor.sample_if_due()
+                            });
+                    if sampled {
+                        this.notify_performance_widget(cx);
                     }
                 })
                 .is_err()

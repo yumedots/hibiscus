@@ -6,6 +6,7 @@ pub(in crate::app) struct AppViews {
     pub(in crate::app) transcript: Entity<TranscriptView>,
     pub(in crate::app) composer: Entity<ComposerView>,
     pub(in crate::app) run_panel: Entity<RunPanelView>,
+    pub(in crate::app) performance_widget: Entity<views::performance_widget::PerformanceWidgetView>,
     pub(in crate::app) notification_panel: ResizeState,
     pub(in crate::app) archived_panel: ResizeState,
     pub(in crate::app) panel_space: Option<gpui::Pixels>,

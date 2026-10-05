@@ -180,6 +180,7 @@ impl FarcasterApp {
         self.finish_session_rail_resize(cx);
         self.finish_run_panel_resize(cx);
         self.finish_rail_panel_resize(cx);
+        self.finish_performance_widget_drag(cx);
     }
 
     pub(in crate::app) fn save_panel_layout(&self) {
