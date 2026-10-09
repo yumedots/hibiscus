@@ -9,8 +9,6 @@ use std::{
 
 use gpui::{FrameTimingCollector, TasksIncluded, TouchPhase, WindowId, profiler};
 
-use super::energy::EnergySample;
-
 const SAMPLE_INTERVAL: Duration = Duration::from_secs(1);
 const SLOW_OPERATION: Duration = Duration::from_millis(2);
 const HIGH_LATENCY_DRAW: Duration = Duration::from_millis(32);
@@ -363,14 +361,12 @@ pub(crate) struct PerformanceMonitor {
     detailed: bool,
     capturing_slow_interval: bool,
     last_slow_report: Option<Instant>,
-    energy: Option<EnergySample>,
     pub(crate) summary: PerformanceSummary,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct PerformanceSummary {
     pub(crate) sample_interval: Duration,
-    pub(crate) energy: Option<EnergySample>,
     pub(crate) frame_count: usize,
     pub(crate) draw_p95: Duration,
     pub(crate) draw_max: Duration,
@@ -425,23 +421,12 @@ impl PerformanceMonitor {
             detailed,
             capturing_slow_interval: false,
             last_slow_report: None,
-            energy: None,
             summary: PerformanceSummary::default(),
         }
     }
 
     pub(crate) const fn is_detailed(&self) -> bool {
         self.detailed
-    }
-
-    pub(crate) fn set_detailed(&mut self, detailed: bool) {
-        self.detailed = detailed;
-        DETAILED.store(detailed, Ordering::Relaxed);
-        profiler::set_trace_enabled(detailed);
-    }
-
-    pub(crate) fn set_energy(&mut self, energy: Option<EnergySample>) {
-        self.energy = energy;
     }
 
     pub(crate) fn sample_if_due(&mut self) -> bool {
@@ -457,7 +442,6 @@ impl PerformanceMonitor {
             self.window_id,
             sample_interval,
             collecting_details,
-            self.energy.clone(),
         );
         if self.detailed {
             log_summary(&self.summary);
@@ -491,7 +475,6 @@ fn collect_summary(
     window_id: WindowId,
     sample_interval: Duration,
     detailed: bool,
-    energy: Option<EnergySample>,
 ) -> PerformanceSummary {
     record_catalog_metrics(crate::sessions::take_catalog_metrics());
     let frames = frames
@@ -542,7 +525,6 @@ fn collect_summary(
 
     PerformanceSummary {
         sample_interval,
-        energy,
         frame_count: frames.len(),
         draw_p95: percentile(&draw, 95),
         draw_max: draw.last().copied().unwrap_or_default(),
@@ -688,7 +670,7 @@ fn log_slow_capture(summary: &PerformanceSummary) {
 fn log_summary(summary: &PerformanceSummary) {
     let active_operations = active_operations(summary);
     zlog::info!(
-        "PERF interval_ms={:.2} frames={} draw_p95_ms={:.2} draw_max_ms={:.2} dirty_to_draw_p95_ms={:.2} dirty_requests_avg={:.1} dirty_requests_max={} snapshots={} stream_events={} stream_coalesced={} transcript_compared={} transcript_projected={} transcript_remeasured={} catalog_scans={} catalog_parses={} catalog_cache_hits={} markdown_cache_hits={} scroll_events={} scroll_phases={}/{}/{} scroll_after_end={} scroll_after_end_max_ms={:.2} scroll_gap_max_ms={:.2} scroll_defers={} scroll_defer_max_ms={:.2} power_mw={} charge_percent={:?} charging={} top_consumer={:?} operations={:?} slowest_task={:?} slowest_action={:?}",
+        "PERF interval_ms={:.2} frames={} draw_p95_ms={:.2} draw_max_ms={:.2} dirty_to_draw_p95_ms={:.2} dirty_requests_avg={:.1} dirty_requests_max={} snapshots={} stream_events={} stream_coalesced={} transcript_compared={} transcript_projected={} transcript_remeasured={} catalog_scans={} catalog_parses={} catalog_cache_hits={} markdown_cache_hits={} scroll_events={} scroll_phases={}/{}/{} scroll_after_end={} scroll_after_end_max_ms={:.2} scroll_gap_max_ms={:.2} scroll_defers={} scroll_defer_max_ms={:.2} operations={:?} slowest_task={:?} slowest_action={:?}",
         summary.sample_interval.as_secs_f64() * 1_000.0,
         summary.frame_count,
         summary.draw_p95.as_secs_f64() * 1_000.0,
@@ -715,48 +697,10 @@ fn log_summary(summary: &PerformanceSummary) {
         summary.scroll_event_gap_max.as_secs_f64() * 1_000.0,
         summary.scroll_deferred_updates,
         summary.scroll_defer_max.as_secs_f64() * 1_000.0,
-        summary
-            .energy
-            .as_ref()
-            .map_or(0, |energy| energy.power_milliwatts),
-        summary
-            .energy
-            .as_ref()
-            .and_then(|energy| energy.charge_percent),
-        summary
-            .energy
-            .as_ref()
-            .is_some_and(|energy| energy.charging),
-        busiest_operation(summary),
         active_operations,
         summary.slowest_task,
         summary.slowest_action,
     );
-}
-
-pub(crate) fn busiest_operation(summary: &PerformanceSummary) -> Option<(&'static str, Duration)> {
-    summary
-        .operations
-        .iter()
-        .filter(|operation| operation.calls > 0)
-        .max_by_key(|operation| operation.total)
-        .map(|operation| (operation.label, operation.total))
-}
-
-pub(crate) fn in_app_work(summary: &PerformanceSummary) -> Duration {
-    summary
-        .operations
-        .iter()
-        .map(|operation| operation.total)
-        .sum()
-}
-
-pub(crate) fn work_share(summary: &PerformanceSummary) -> f64 {
-    let interval = summary.sample_interval.as_secs_f64();
-    if interval <= 0.0 {
-        return 0.0;
-    }
-    in_app_work(summary).as_secs_f64() / interval * 100.0
 }
 
 fn active_operations(summary: &PerformanceSummary) -> Vec<&OperationSummary> {

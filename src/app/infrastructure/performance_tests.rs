@@ -21,46 +21,6 @@ fn individual_timing_logs_only_slow_operations() {
 }
 
 #[test]
-fn the_busiest_operation_is_the_one_with_the_most_accumulated_time() {
-    let summary = PerformanceSummary {
-        operations: vec![
-            operation("Quiet", 4, 3),
-            operation("Hot", 2, 40),
-            operation("Idle", 0, 900),
-        ],
-        ..PerformanceSummary::default()
-    };
-    assert_eq!(
-        busiest_operation(&summary),
-        Some(("Hot", Duration::from_millis(40)))
-    );
-    assert_eq!(busiest_operation(&PerformanceSummary::default()), None);
-}
-
-#[test]
-fn the_work_share_is_the_measured_work_over_the_sample_window() {
-    let summary = PerformanceSummary {
-        sample_interval: Duration::from_secs(2),
-        operations: vec![operation("A", 1, 20), operation("B", 1, 30)],
-        ..PerformanceSummary::default()
-    };
-    assert_eq!(in_app_work(&summary), Duration::from_millis(50));
-    assert!((work_share(&summary) - 2.5).abs() < f64::EPSILON);
-    assert_eq!(work_share(&PerformanceSummary::default()), 0.0);
-}
-
-fn operation(label: &'static str, calls: u64, total_ms: u64) -> OperationSummary {
-    OperationSummary {
-        label,
-        calls,
-        total: Duration::from_millis(total_ms),
-        max: Duration::from_millis(total_ms),
-        work: calls,
-        work_label: "items",
-    }
-}
-
-#[test]
 fn tracing_every_operation_logs_phases_under_the_slow_operation_floor() {
     let instant = Duration::from_micros(1);
     assert!(!should_log_operation_with(instant, false));

@@ -110,7 +110,6 @@ struct DirtyRegions {
     transcript: bool,
     composer: bool,
     run: bool,
-    widget: bool,
 }
 
 impl DirtyRegions {
@@ -207,9 +206,6 @@ impl DirtyRegions {
         }
         if self.run {
             app.notify_run_panel(cx);
-        }
-        if self.widget {
-            app.notify_performance_widget(cx);
         }
         if self.root {
             cx.notify();
@@ -975,11 +971,10 @@ impl FarcasterApp {
             0,
         );
         let _timing = crate::app::infrastructure::performance::Timing::new("runtime.drain_events");
-        let sampled = self.lifecycle.performance_monitor.as_mut().is_some_and(
-            crate::app::infrastructure::performance::PerformanceMonitor::sample_if_due,
-        );
         let mut dirty = DirtyRegions {
-            widget: sampled,
+            run: self.lifecycle.performance_monitor.as_mut().is_some_and(
+                crate::app::infrastructure::performance::PerformanceMonitor::sample_if_due,
+            ),
             ..DirtyRegions::default()
         };
         while let Ok(event) = self.runtime.try_recv() {

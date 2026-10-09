@@ -6,7 +6,6 @@ pub(super) struct RegionViews {
     pub(super) transcript: Entity<TranscriptView>,
     pub(super) composer: Entity<ComposerView>,
     pub(super) run_panel: Entity<RunPanelView>,
-    pub(super) performance_widget: Entity<views::performance_widget::PerformanceWidgetView>,
 }
 
 pub(super) fn create(cx: &mut Context<FarcasterApp>) -> RegionViews {
@@ -30,8 +29,6 @@ pub(super) fn create(cx: &mut Context<FarcasterApp>) -> RegionViews {
 
     let composer = cx.new(|_| ComposerView::new(app.clone()));
     let run_panel = cx.new(|_| RunPanelView::new(app.clone()));
-    let performance_widget =
-        cx.new(|_| views::performance_widget::PerformanceWidgetView::new(app.clone()));
 
     RegionViews {
         session_rail,
@@ -39,7 +36,6 @@ pub(super) fn create(cx: &mut Context<FarcasterApp>) -> RegionViews {
         transcript,
         composer,
         run_panel,
-        performance_widget,
     }
 }
 

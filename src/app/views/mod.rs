@@ -3,7 +3,6 @@ mod attachments;
 mod composer;
 pub(in crate::app) mod dialogs;
 pub(crate) mod overlay_state;
-pub(in crate::app) mod performance_widget;
 mod regions;
 mod root;
 pub(in crate::app) mod run_panel;

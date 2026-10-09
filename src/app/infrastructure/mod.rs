@@ -4,7 +4,6 @@ mod app_state;
 pub(in crate::app) use app_state::AppLifecycle;
 
 pub(crate) mod editor_launch;
-pub(crate) mod energy;
 pub(crate) mod isolation;
 pub(crate) mod launch;
 #[cfg(target_os = "macos")]

@@ -2,7 +2,7 @@ use gpui::{FontWeight, IntoElement, ParentElement as _, Styled as _, div};
 
 use crate::app::ui::{primitives::section_heading, theme::theme};
 
-pub(in crate::app) fn render_performance(
+pub(super) fn render_performance(
     summary: &crate::app::infrastructure::performance::PerformanceSummary,
 ) -> impl IntoElement {
     div()
@@ -17,11 +17,6 @@ pub(in crate::app) fn render_performance(
             "GPUI profiler · {:.2} s sample",
             summary.sample_interval.as_secs_f64()
         )))
-        .child(metric_row("Draw", draw_label(summary)))
-        .child(metric_row("Battery", charge_label(summary)))
-        .child(metric_row("Energy this sample", energy_label(summary)))
-        .child(metric_row("Top consumer", top_consumer_label(summary)))
-        .child(metric_row("In-app work", in_app_work_label(summary)))
         .child(metric_row(
             "Frames",
             format!("{} sampled", summary.frame_count),
@@ -138,69 +133,6 @@ fn operation_metric_row(
             operation.work,
             operation.work_label,
         ),
-    )
-}
-
-fn draw_label(summary: &crate::app::infrastructure::performance::PerformanceSummary) -> String {
-    let Some(energy) = summary.energy.as_ref() else {
-        return "unavailable".into();
-    };
-    let direction = if energy.charging {
-        "charging"
-    } else {
-        "discharging"
-    };
-    format!("{:.2} W {direction}", energy.power_watts())
-}
-
-fn charge_label(summary: &crate::app::infrastructure::performance::PerformanceSummary) -> String {
-    let Some(energy) = summary.energy.as_ref() else {
-        return "unavailable".into();
-    };
-    let charge = energy
-        .charge_percent
-        .map_or_else(|| "—".into(), |percent| format!("{percent}%"));
-    match energy.minutes_remaining {
-        Some(minutes) => format!("{} · {}h {:02}m left", charge, minutes / 60, minutes % 60),
-        None => charge,
-    }
-}
-
-fn energy_label(summary: &crate::app::infrastructure::performance::PerformanceSummary) -> String {
-    let Some(energy) = summary.energy.as_ref() else {
-        return "unavailable".into();
-    };
-    format!(
-        "{:.3} mWh over {:.2} s",
-        energy.consumed_milliwatt_hours(summary.sample_interval),
-        summary.sample_interval.as_secs_f64()
-    )
-}
-
-fn top_consumer_label(
-    summary: &crate::app::infrastructure::performance::PerformanceSummary,
-) -> String {
-    crate::app::infrastructure::performance::busiest_operation(summary).map_or_else(
-        || "—".into(),
-        |(label, total)| {
-            format!(
-                "{} · {}",
-                label,
-                crate::app::infrastructure::performance::duration_label(total)
-            )
-        },
-    )
-}
-
-fn in_app_work_label(
-    summary: &crate::app::infrastructure::performance::PerformanceSummary,
-) -> String {
-    format!(
-        "{} · {:.1}% of the sample",
-        crate::app::infrastructure::performance::duration_label(
-            crate::app::infrastructure::performance::in_app_work(summary)
-        ),
-        crate::app::infrastructure::performance::work_share(summary)
     )
 }
 

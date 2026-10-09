@@ -7,10 +7,7 @@ use super::{
     super::{FarcasterApp, OVERLAY_KEY_CONTEXT, dialogs},
     keybindings,
 };
-use crate::app::{
-    infrastructure::performance::PerformanceMonitor,
-    ui::{primitives::modal, theme::theme},
-};
+use crate::app::ui::{primitives::modal, theme::theme};
 
 impl FarcasterApp {
     pub(super) fn render_root_overlays(
@@ -104,13 +101,6 @@ impl FarcasterApp {
             .when(self.lifecycle.pending_quit.is_some(), |root| {
                 root.child(dialogs::quit_confirmation::render(self, entity.clone()))
             })
-            .when(
-                self.lifecycle
-                    .performance_monitor
-                    .as_ref()
-                    .is_some_and(PerformanceMonitor::is_detailed),
-                |root| root.child(self.views.performance_widget.clone()),
-            )
     }
 }
 

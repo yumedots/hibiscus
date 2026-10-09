@@ -132,8 +132,7 @@ actions!(
         ComposerCompletionNext,
         ShowKeybindings,
         IncreaseTranscriptFontSize,
-        DecreaseTranscriptFontSize,
-        TogglePerformanceMonitor
+        DecreaseTranscriptFontSize
     ]
 );
 

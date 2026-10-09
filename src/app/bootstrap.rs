@@ -323,7 +323,6 @@ impl FarcasterApp {
                 transcript: regions.transcript,
                 composer: regions.composer,
                 run_panel: regions.run_panel,
-                performance_widget: regions.performance_widget,
                 notification_panel: ui::primitives::ResizeState::restored(
                     persisted.panel_layout.notifications_height,
                     persisted.panel_layout.notifications_collapsed,

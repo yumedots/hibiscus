@@ -495,14 +495,6 @@ fn registry_for_platform(prefix: &str) -> Vec<Shortcut> {
             show_in_picker: false,
             binding: KeyBinding::new("escape", DismissSurface, Some(PICKER_KEY_CONTEXT)),
         },
-        shortcut!(
-            "Application",
-            "Toggle performance and battery monitor",
-            "f9",
-            crate::app::TogglePerformanceMonitor,
-            Some(APP_SHORTCUT_CONTEXT)
-        )
-        .in_picker(true),
         application_shortcut!("Application", "Quit", "q", QuitApplication),
     ];
     shortcuts.extend(aliases);
